@@ -1,0 +1,52 @@
+{
+  "name": "@ianwusb/dsh-opencode-compat",
+  "version": "0.2.1",
+  "description": "DSH plugin: map OpenCode-style shell/todowrite/webfetch/websearch names to native DSH tools (safe delegation only).",
+  "type": "module",
+  "license": "MIT",
+  "author": "Swcmb",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Swcmb/dsh-opencode-compat.git"
+  },
+  "homepage": "https://github.com/Swcmb/dsh-opencode-compat#readme",
+  "bugs": {
+    "url": "https://github.com/Swcmb/dsh-opencode-compat/issues"
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
+  "engines": {
+    "node": ">=22.19.0"
+  },
+  "main": "./lib/index.js",
+  "exports": {
+    ".": "./lib/index.js",
+    "./normalize": "./lib/normalize.js",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib",
+    "cordis.patch.yml",
+    "README.md",
+    "LICENSE"
+  ],
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
+  "scripts": {
+    "test": "node --test test/*.test.mjs"
+  },
+  "keywords": [
+    "deepseek-harness",
+    "dsh",
+    "cordis",
+    "plugin",
+    "opencode",
+    "compat",
+    "tool-alias"
+  ]
+}

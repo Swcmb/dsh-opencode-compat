@@ -1,0 +1,4 @@
+# @ianwusb/dsh-opencode-compat bundle layer
+- insert:
+    - id: opencode-compat
+      name: '@ianwusb/dsh-opencode-compat'
