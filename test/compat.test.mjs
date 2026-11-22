@@ -143,7 +143,7 @@ test('delegation failure is structured', async () => {
   assert.equal(value.error.message, 'boom')
 })
 
-test('apply registers all four aliases via ctx.inject', () => {
+test('apply registers the global aliases and the ops_* layer via ctx.inject', () => {
   const registered = []
   const tools = fakeTools()
   tools.register = (tool) => registered.push(tool)
@@ -155,7 +155,19 @@ test('apply registers all four aliases via ctx.inject', () => {
     },
   }
   apply(ctx)
-  assert.deepEqual(registered.map((tool) => tool.name).sort(), ['shell', 'todowrite', 'webfetch', 'websearch'])
+  const names = registered.map((tool) => tool.name).sort()
+  assert.deepEqual(names, [
+    'bash',
+    'glob',
+    'grep',
+    'list',
+    'ls',
+    'read',
+    'shell',
+    'todowrite',
+    'webfetch',
+    'websearch',
+  ])
 })
 
 test('renderValue and aliasHint remain readable', () => {

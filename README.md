@@ -26,17 +26,36 @@ DSH 里对应的是 `pwsh`、`todo_write`、`web_fetch`、`web_search`。本插�
 
 `shell` 不再自己 spawn PowerShell。它调用原生 `pwsh` 的 `execute`，因此 DSH 的命令黑名单、工作目录解析、沙箱与审批链继续生效。
 
-## 为什么删掉了 read / write / edit / glob / grep
+## ops_* 层：read / glob / grep / bash / ls / list
 
-这些别名的名字与 DSH 原生工具相同。插件由 profile 根 `cordis.patch.yml` 加载，作用域是 global；`tools.register("read")` 会与原生 `read` 同层重名并抛：
+`read`/`glob`/`grep` 这三个名字**本机内核是有的**（agent 创建后约 5–6 秒注册到位），
+但它们注册在 **agent 自己的作用域**，profile 根插件在 global 层注册同名工具会撞：
 
 ```text
 tool "read" is already registered (for a per-agent variant, register through that agent's `agent.ctx` instead)
 ```
 
-旧实现把这 5 个同名别名注册失败后静默跳过，实际没有生效。继续保留只会误导使用者，因此删除。参数名修正（例如 `path` → `file_path`）由外部工具网关 `toolgate` 的 sidecar 层负责；本插件只处理工具名。
+所以这一层用两条腿走（`lib/ops-aliases.js`）：
 
-同样，旧的 `shell` 自实现 PowerShell 已删除，因为它绕过了 `pwsh` 内置策略。
+1. `agent/created` 时通过 `agent.ctx.plugin(child => child.inject(['tools'], …))` 注册进
+   **agent 本层**——与目标工具同层，且 `tools.restrict({ deny })` 只能遮继承来的全局名，
+   遮不掉本层；
+2. 再在 global 层注册一份，供没有 agent 上下文的调用兜底。
+
+| 别名 | 委托目标 | 实际作用 |
+|---|---|---|
+| `read` | `ops_inspect_local_file` | 兜底：官方工具到位前的那几秒 |
+| `glob` | `ops_glob` | 同上 |
+| `grep` | `ops_grep` | 同上 |
+| `bash` | `ops_bash` | **真实补充**：内核从不注册 `bash`（命令工具是 `ops_bash` / `pwsh`） |
+| `ls` / `list` | `ops_glob` | **真实补充**：内核从不注册 `ls` |
+
+同层重名时内核会拒绝（`tool "read" is already registered in this scope`），插件记日志跳过，
+不重试、不覆盖。委托拿到真实定义后调它自己的 `execute`，DSH 的参数校验、沙箱、审批与渲染
+继续生效；插件不读文件、不 spawn 进程。
+
+> 不要用 `dsh-ops` 的 `replaceTools` 解决 `unknown tool "read"`：那是
+> `tools.restrict({ deny })`，只把官方名字藏起来，不会让 `ops_*` 接管这些名字。
 
 ## 安装
 
